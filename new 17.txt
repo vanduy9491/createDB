@@ -118,9 +118,9 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
     # Store the modified string and replacement values for this iteration
     $modifiedStrings += $modifiedString
     
-    # Format the replacement values as a comma-separated list, sorted by index
+    # Format the replacement values as a newline-separated list, sorted by index
     $orderedValues = $fieldsOrder | Sort-Object Index | ForEach-Object { $replacementValues[$_.Field] }
-    $allReplacementValues += ($orderedValues -join ',')
+    $allReplacementValues += ($orderedValues -join "`n,")
 }
 
 # Define the output file path
