@@ -45,7 +45,8 @@ function Generate-SampleValue {
         return [math]::Round((Get-Random -Minimum 0 -Maximum $maxValue) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
     }
     elseif ($dataType -eq 'DATETIME2') {
-        return (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
+	 $dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
+        return "'$dateValue'" 
     }
     return 'defaultValue'
 }
