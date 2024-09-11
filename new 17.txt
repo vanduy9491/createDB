@@ -1,4 +1,3 @@
-# Define the original string with placeholders
 $originalString = ""
 
 # Regular expression to match placeholders and types
@@ -23,10 +22,18 @@ function Generate-RandomString {
 function Generate-SampleValue {
     param (
         [string]$dataType,
-        [string]$lengthOrScale
+        [string]$lengthOrScale,
+        [string]$fieldName
     )
     if ($dataType -eq 'NCHAR' -or $dataType -eq 'VARCHAR') {
         $length = [int]$lengthOrScale
+        # Special case for _YMD with NCHAR(8)
+        if ($fieldName -match '_YMD' -and $length -eq 8) {
+            return "'20240101'"
+        }
+		elseif ($fieldName -match '_YM' -and $length -eq 6) {
+            return "'202401'"
+        }
         $value = Generate-RandomString -length $length
         return "'$value'"  # Add single quotes for CHAR and VARCHAR types
     }
@@ -81,7 +88,7 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
         $field = $fieldInfo.Field
         $dataType = $fieldInfo.DataType
         $lengthOrScale = $fieldInfo.LengthOrScale
-        $sampleValue = Generate-SampleValue -dataType $dataType -lengthOrScale $lengthOrScale
+        $sampleValue = Generate-SampleValue -dataType $dataType -lengthOrScale $lengthOrScale -fieldName $field
         $replacementValues[$field] = $sampleValue
     }
 
@@ -95,8 +102,8 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
 
     # Add default values for specific fields
     $defaultValues = @{
-        'NY_KS_KYAKUSU' = '1234567'
-        'NY_KS_ZEIKIN' = "'987654321'"
+        'KUSHN_PRGRM' = "'duytv'"
+        'KUSHN_NCHJ' = "'19911009'"
     }
 
     foreach ($field in $defaultValues.Keys) {
@@ -124,7 +131,7 @@ Set-Content -Path $outputFilePath -Value $null
 # Write each version of modified strings to the file
 for ($i = 0; $i -lt $numberOfCopies; $i++) {
     # Format the replacement values as a comma-separated list
-    $replacementValuesContent = "Replacement Values Version $($i+1):`n($($allReplacementValues[$i]))"
+    $replacementValuesContent = "Replacement Values Version $($i+1):n($($allReplacementValues[$i]))"
 
     # Write content to the file
     $replacementValuesContent | Out-File -FilePath $outputFilePath -Append
