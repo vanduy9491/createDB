@@ -45,8 +45,8 @@ function Generate-SampleValue {
         return [math]::Round((Get-Random -Minimum 0 -Maximum $maxValue) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
     }
     elseif ($dataType -eq 'DATETIME2') {
-	 $dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
-        return "'$dateValue'" 
+		$dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
+        return "'$dateValue'"
     }
     return 'defaultValue'
 }
@@ -104,7 +104,7 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
     # Add default values for specific fields
     $defaultValues = @{
         'KUSHN_PRGRM' = "'duytv'"
-        'KUSHN_NCHJ' = "'19911009'"
+        'KUSHN_NCHJ' = "'1991-10-09'"
     }
 
     foreach ($field in $defaultValues.Keys) {
