@@ -1,15 +1,8 @@
-# Define the original string with placeholders
+
 $originalString = ""
-
-# Regular expression to match placeholders and types
 $regex = '<(\w+),\s*(\w+)\(([\d,]*)\)\s*,\s*>'
-
-# Create a dictionary to store the replacement values
 $replacementValues = @{}
-# Create a list to keep track of the order of fields
 $fieldsOrder = @()
-
-# Function to generate a random string of a specified length
 function Generate-RandomString {
     param (
         [int]$length
@@ -18,8 +11,6 @@ function Generate-RandomString {
     $random = New-Object System.Random
     -join ((1..$length) | ForEach-Object { $chars[$random.Next($chars.Length)] })
 }
-
-# Function to generate a sample value based on data type
 function Generate-SampleValue {
     param (
         [string]$dataType,
@@ -43,19 +34,12 @@ function Generate-SampleValue {
     return 'defaultValue'
 }
 
-# Extract placeholders and their types using regex
 $matches = [regex]::Matches($originalString, $regex)
-
-# Initialize the list to store all versions of modified strings
 $modifiedStrings = @()
-
-# Initialize the list to store replacement values for each version
 $allReplacementValues = @()
 
-# Number of copies you want to create
 $numberOfCopies = 3
 
-# Collect field names and their data types with index
 foreach ($match in $matches) {
     $field = $match.Groups[1].Value
     $dataType = $match.Groups[2].Value
@@ -68,15 +52,9 @@ foreach ($match in $matches) {
     }
 }
 
-# Generate multiple versions of the modified string
 for ($i = 1; $i -le $numberOfCopies; $i++) {
-    # Initialize modified string for this iteration
     $modifiedString = $originalString
-
-    # Create a new dictionary for replacement values for this iteration
     $replacementValues = @{}
-
-    # Replace placeholders with generated values for this iteration
     foreach ($fieldInfo in $fieldsOrder) {
         $field = $fieldInfo.Field
         $dataType = $fieldInfo.DataType
@@ -84,21 +62,16 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
         $sampleValue = Generate-SampleValue -dataType $dataType -lengthOrScale $lengthOrScale
         $replacementValues[$field] = $sampleValue
     }
-
-    # Replace placeholders in the order of fields
     foreach ($fieldInfo in $fieldsOrder) {
         $field = $fieldInfo.Field
         $replacementValue = $replacementValues[$field]
         $pattern = [regex]::Escape("<$field, $($fieldInfo.DataType)($($fieldInfo.LengthOrScale)),>")
         $modifiedString = $modifiedString -replace $pattern, $replacementValue
     }
-
-    # Add default values for specific fields
     $defaultValues = @{
         'NY_KS_KYAKUSU' = '1234567'
         'NY_KS_ZEIKIN' = "'987654321'"
     }
-
     foreach ($field in $defaultValues.Keys) {
         if ($replacementValues.ContainsKey($field)) {
             $replacementValues[$field] = $defaultValues[$field]
@@ -106,27 +79,15 @@ for ($i = 1; $i -le $numberOfCopies; $i++) {
             $modifiedString = $modifiedString -replace $pattern, $defaultValues[$field]
         }
     }
-
-    # Store the modified string and replacement values for this iteration
     $modifiedStrings += $modifiedString
-    
-    # Format the replacement values as a comma-separated list, sorted by index
     $orderedValues = $fieldsOrder | Sort-Object Index | ForEach-Object { $replacementValues[$_.Field] }
     $allReplacementValues += ($orderedValues -join ',')
 }
-
-# Define the output file path
 $outputFilePath = "D:\testToll\output.sql"
-
-# Ensure the file is created and clear previous content
 Set-Content -Path $outputFilePath -Value $null
-
-# Write each version of modified strings to the file
 for ($i = 0; $i -lt $numberOfCopies; $i++) {
     # Format the replacement values as a comma-separated list
     $replacementValuesContent = "Replacement Values Version $($i+1):`n($($allReplacementValues[$i]))"
-
-    # Write content to the file
     $replacementValuesContent | Out-File -FilePath $outputFilePath -Append
 }
 
