@@ -1,0 +1,32 @@
+DECLARE @sql NVARCHAR(MAX) = 'INSERT INTO [dbo].[YourTableName] (';
+
+SELECT 
+    @sql = @sql + COLUMN_NAME + ' -- ' + DATA_TYPE + 
+           CASE WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL 
+                THEN ' (' + CAST(CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) + ')' 
+                ELSE '' END +
+           CASE WHEN IS_NULLABLE = 'YES' THEN ' NULL, ' ELSE ' NOT NULL, ' END
+FROM 
+    INFORMATION_SCHEMA.COLUMNS
+WHERE 
+    TABLE_SCHEMA = 'dbo'
+    AND TABLE_NAME = 'YourTableName';
+
+SET @sql = LEFT(@sql, LEN(@sql) - 2) + ') VALUES (';
+
+SELECT 
+    @sql = @sql + '<' + COLUMN_NAME + ', ' + DATA_TYPE + 
+           CASE WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL 
+                THEN ' (' + CAST(CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) + ')' 
+                ELSE '' END + 
+           ',> -- ' + DATA_TYPE + 
+           CASE WHEN IS_NULLABLE = 'YES' THEN ' NULL, ' ELSE ' NOT NULL, ' END
+FROM 
+    INFORMATION_SCHEMA.COLUMNS
+WHERE 
+    TABLE_SCHEMA = 'dbo'
+    AND TABLE_NAME = 'YourTableName';
+
+SET @sql = LEFT(@sql, LEN(@sql) - 2) + ');';
+
+PRINT @sql;
