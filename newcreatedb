@@ -1,0 +1,103 @@
+# Đoạn chuỗi đầu vào
+$originalString = "(<TABLE_ID, nvarchar (10),  NULL, >, <NO, int,  NOT NULL, >, <TABLE_NAME, nvarchar (20),  NOT NULL, >, <LOGICAL_NAME, nvarchar (30),  NOT NULL, >, <PHYSICAL_NAME, nvarchar (45),  NOT NULL, >, <TYPE, nvarchar (100),  NULL, >, <LENGTH, nvarchar (10),  NULL, >, <ACCURACY, nvarchar (10),  NULL, >, <REQUIREMENT, nvarchar (2),  NULL, >, <PRIMARY_KEY, nvarchar (1),  NULL, >, <CONTENT_DEFINITION, numeric (9,3),  NOT NULL, >)"
+
+# Regular expression để phân tích các trường và kiểu dữ liệu
+$regex = '<(\w+),\s+(\w+)\s*\(\s*(\d+)?(?:,\s*(\d+))?\s*\),\s+(NULL|NOT NULL)'
+
+# Danh sách để giữ thông tin cột
+$fieldsOrder = @()
+
+# Hàm để tạo giá trị mẫu
+function Generate-SampleValue {
+    param (
+        [string]$dataType,
+        [string]$lengthOrScale,
+        [bool]$canBeNull
+    )
+
+    if ($canBeNull -eq 1) {
+        return 'NULL'  # Trả về NULL với xác suất 50%
+    }
+
+    switch ($dataType) {
+        'char' {
+            if ($lengthOrScale) {
+                return "'$([string]::Join('', @(1..[int]$lengthOrScale | ForEach-Object { "A" })))'"  # Tạo chuỗi "A" với chiều dài max
+            }
+            return "'defaultCharValue'"
+        }
+        'varchar' {
+            if ($lengthOrScale) {
+                return "'$([string]::Join('', @(1..[int]$lengthOrScale | ForEach-Object { "A" })))'"
+            }
+            return "'defaultVarcharValue'"
+        }
+        'nvarchar' {
+            if ($lengthOrScale) {
+                return "'$([string]::Join('', @(1..[int]$lengthOrScale | ForEach-Object { "A" })))'"
+            }
+            return "'defaultVarcharValue'"
+        }
+        'numeric' {
+            if ($lengthOrScale -match '(\d+),(\d+)') {
+                $totalDigits = [int]$matches[1]
+                $decimalDigits = [int]$matches[2]
+                $wholeDigits = $totalDigits - $decimalDigits
+                $wholePart = "9" * $wholeDigits
+                $decimalPart = "9" * $decimalDigits
+                return "$wholePart`.$decimalPart"  # Định dạng với số thập phân
+            }
+            return '0.000'  # Giá trị mặc định cho numeric
+        }
+        'datetime' {
+            return "'$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"  # Ví dụ cho datetime
+        }
+        default {
+            return "'defaultValue'"  # Giá trị mặc định cho các kiểu khác
+        }
+    }
+}
+
+# Phân tích chuỗi đầu vào
+$matches = [regex]::Matches($originalString, $regex)
+
+# Số lượng bản ghi muốn tạo
+$recordCount = 5  # Thay đổi số lượng bản ghi tại đây
+
+$content = @()
+
+for ($i = 1; $i -le $recordCount; $i++) {
+    $record = @()
+    
+    foreach ($match in $matches) {
+        $fieldName = $match.Groups[1].Value
+        $dataType = $match.Groups[2].Value
+        $length = $match.Groups[3].Value
+        $scale = $match.Groups[4].Value
+        $nullability = $match.Groups[5].Value
+
+        $canBeNull = ($nullability -eq 'NULL')
+
+        # Tạo giá trị mẫu cho cột
+        $sampleValue = Generate-SampleValue -dataType $dataType -lengthOrScale "$length,$scale" -canBeNull $canBeNull
+
+        # Nếu là TABLE_ID thì gán giá trị mặc định
+        if ($fieldName -eq 'TABLE_ID') {
+            $sampleValue = "'111'"
+        }
+
+        # Thêm giá trị vào bản ghi
+        $record += $sampleValue
+    }
+    
+    # Thêm bản ghi vào nội dung
+    $content += "($([string]::Join(',', $record)))"
+}
+
+# Đường dẫn file xuất
+$outputFilePath = "D:\testToll\output.txt"
+
+# Xuất nội dung ra file
+Set-Content -Path $outputFilePath -Value ($content -join "`n")
+
+Write-Output "Data has been written to $outputFilePath"
