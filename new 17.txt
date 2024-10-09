@@ -14,7 +14,7 @@ function Generate-RandomString {
         [int]$length
     )
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    $random = New-Object System.Random
+    $random = New-Object System.Random -ArgumentList (Get-Date).Ticks
     -join ((1..$length) | ForEach-Object { $chars[$random.Next($chars.Length)] })
 }
 
