@@ -32,12 +32,13 @@ function Generate-SampleValue {
         
         # Nếu có suffix từ _1 đến _31, sử dụng suffix làm phần cuối của giá trị
         if ($suffix -ne $null) {
-            $maxValue = [math]::Pow(10, $precision - $scale) - 1
-            $numericValue = [math]::Round(($maxValue - 1 + $suffix) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
+            # Cộng suffix vào cuối giá trị, ví dụ 999999 + suffix
+            $baseValue = [math]::Pow(10, $precision) - 1
+            $numericValue = [math]::Round(($baseValue - (10 * $suffix) + $suffix) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
             return $numericValue
         }
         else {
-            $maxValue = [math]::Pow(10, $precision - $scale) - 1
+            $maxValue = [math]::Pow(10, $precision) - 1
             return [math]::Round((Get-Random -Minimum 0 -Maximum $maxValue) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
         }
     }
