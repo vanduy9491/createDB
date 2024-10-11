@@ -32,10 +32,10 @@ function Generate-SampleValue {
         
         # Nếu có suffix từ _1 đến _31, sử dụng suffix làm phần cuối của giá trị
         if ($suffix -ne $null) {
-            # Cộng suffix vào cuối giá trị, ví dụ 999999 + suffix
-            $baseValue = [math]::Pow(10, $precision) - 1
-            $numericValue = [math]::Round(($baseValue - (10 * $suffix) + $suffix) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
-            return $numericValue
+            # Tính baseValue sao cho có đủ số chữ số tương ứng với precision
+            $baseValue = '9' * ($precision - 1)  # Ví dụ: nếu precision = 7, baseValue = 999999
+            $numericValue = "${baseValue}${suffix}"  # Nối số suffix vào cuối baseValue
+            return [int]$numericValue
         }
         else {
             $maxValue = [math]::Pow(10, $precision) - 1
