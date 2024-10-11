@@ -1,0 +1,49 @@
+function Generate-SampleValue {
+    param (
+        [string]$dataType,
+        [string]$lengthOrScale,
+        [string]$fieldName
+    )
+    
+    # Kiểm tra nếu fieldName kết thúc bằng _1 đến _31
+    if ($fieldName -match '_([1-9]|[12][0-9]|3[01])$') {
+        $suffix = [int]($matches[1])  # Lấy số cuối cùng từ _1 đến _31
+    }
+    else {
+        $suffix = $null  # Nếu không có, gán giá trị null
+    }
+
+    if ($dataType -eq 'NCHAR' -or $dataType -eq 'VARCHAR') {
+        $length = [int]$lengthOrScale
+        # Special case for _YMD with NCHAR(8)
+        if ($fieldName -match '_YMD' -and $length -eq 8) {
+            return "'20240101'"
+        }
+        elseif ($fieldName -match '_YM' -and $length -eq 6) {
+            return "'202401'"
+        }
+        $value = Generate-RandomString -length $length
+        return "'$value'"  # Add single quotes for CHAR and VARCHAR types
+    }
+    elseif ($dataType -eq 'NUMERIC') {
+        $parts = $lengthOrScale -split ','
+        $precision = [int]$parts[0]
+        $scale = [int]$parts[1]
+        
+        # Nếu có suffix từ _1 đến _31, sử dụng suffix làm phần cuối của giá trị
+        if ($suffix -ne $null) {
+            $maxValue = [math]::Pow(10, $precision - $scale) - 1
+            $numericValue = [math]::Round(($maxValue - 1 + $suffix) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
+            return $numericValue
+        }
+        else {
+            $maxValue = [math]::Pow(10, $precision - $scale) - 1
+            return [math]::Round((Get-Random -Minimum 0 -Maximum $maxValue) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
+        }
+    }
+    elseif ($dataType -eq 'DATETIME2') {
+        $dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
+        return "'$dateValue'"
+    }
+    return 'defaultValue'
+}
