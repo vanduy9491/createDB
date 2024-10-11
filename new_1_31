@@ -4,7 +4,7 @@ function Generate-SampleValue {
         [string]$lengthOrScale,
         [string]$fieldName
     )
-    
+
     # Kiểm tra nếu fieldName kết thúc bằng _1 đến _31
     if ($fieldName -match '_([1-9]|[12][0-9]|3[01])$') {
         $suffix = [int]($matches[1])  # Lấy số cuối cùng từ _1 đến _31
@@ -29,12 +29,12 @@ function Generate-SampleValue {
         $parts = $lengthOrScale -split ','
         $precision = [int]$parts[0]
         $scale = [int]$parts[1]
-        
+
         # Nếu có suffix từ _1 đến _31, sử dụng suffix làm phần cuối của giá trị
         if ($suffix -ne $null) {
-            # Tính baseValue sao cho có đủ số chữ số tương ứng với precision
-            $baseValue = '9' * ($precision - 1)  # Ví dụ: nếu precision = 7, baseValue = 999999
-            $numericValue = "${baseValue}${suffix}"  # Nối số suffix vào cuối baseValue
+            # Tính giá trị base: baseValue có độ dài = precision (precision là tổng số chữ số)
+            $baseValue = '9' * ($precision - 1)  # Base value có độ dài = precision - 1 chữ số
+            $numericValue = "${baseValue}${suffix}"  # Nối suffix vào base value
             return [int]$numericValue
         }
         else {
