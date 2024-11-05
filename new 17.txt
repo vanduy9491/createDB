@@ -31,7 +31,7 @@ function Generate-SampleValue {
         if ($fieldName -match '_YMD' -and $length -eq 8) {
             return "'20240101'"
         }
-		elseif ($fieldName -match '_YM' -and $length -eq 6) {
+        elseif ($fieldName -match '_YM' -and $length -eq 6) {
             return "'202401'"
         }
         $value = Generate-RandomString -length $length
@@ -42,14 +42,22 @@ function Generate-SampleValue {
         $precision = [int]$parts[0]
         $scale = [int]$parts[1]
         $maxValue = [math]::Pow(10, $precision - $scale) - 1
+
+        # Handle numeric types with scale = 0 correctly
+        if ($scale -eq 0) {
+            return (Get-Random -Minimum 0 -Maximum ($maxValue + 1))
+        }
+
+        # If scale > 0, generate a random value with decimals
         return [math]::Round((Get-Random -Minimum 0 -Maximum $maxValue) + [math]::Pow(10, -$scale) * (Get-Random -Minimum 0 -Maximum 99), $scale)
     }
     elseif ($dataType -eq 'DATETIME2') {
-		$dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
+        $dateValue = (Get-Date).AddDays(-1 * (Get-Random -Minimum 1 -Maximum 365)).ToString('yyyy-MM-ddTHH:mm:ss')
         return "'$dateValue'"
     }
     return 'defaultValue'
 }
+
 
 # Extract placeholders and their types using regex
 $matches = [regex]::Matches($originalString, $regex)
